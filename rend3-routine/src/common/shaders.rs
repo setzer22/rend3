@@ -16,7 +16,7 @@ pub unsafe fn mode_safe_shader(
     gpu_source: &str,
 ) -> ShaderModule {
     let shader_dir = match mode {
-        RendererMode::CPUPowered => &WGSL_SHADERS,
+        RendererMode::CPUPowered => &SPIRV_SHADERS,
         RendererMode::GPUPowered => &SPIRV_SHADERS,
     };
 
@@ -33,7 +33,7 @@ pub unsafe fn mode_safe_shader(
     match use_unsafe {
         false => device.create_shader_module(&ShaderModuleDescriptor {
             label: Some(label),
-            source: ShaderSource::Wgsl(Cow::Borrowed(std::str::from_utf8(source).unwrap())),
+            source: wgpu::util::make_spirv(source),
         }),
         true => device.create_shader_module_spirv(&ShaderModuleDescriptorSpirV {
             label: Some(label),
