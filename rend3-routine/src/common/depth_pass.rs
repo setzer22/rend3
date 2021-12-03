@@ -127,7 +127,7 @@ fn create_depth_inner(
         blend: None,
         write_mask: ColorWrites::empty(),
     }];
-    let cpu_vertex_buffers = cpu_vertex_buffers();
+    let cpu_vertex_buffers = [];
     let gpu_vertex_buffers = gpu_vertex_buffers();
     args.device.create_render_pipeline(&RenderPipelineDescriptor {
         label: Some(name),
@@ -148,12 +148,12 @@ fn create_depth_inner(
                 DepthPassType::Shadow => Face::Front,
                 DepthPassType::Prepass => Face::Back,
             }),
-            clamp_depth: matches!(args.ty, DepthPassType::Shadow),
+            clamp_depth: false,
             polygon_mode: PolygonMode::Fill,
             conservative: false,
         },
         depth_stencil: Some(DepthStencilState {
-            format: TextureFormat::Depth32Float,
+            format: TextureFormat::Depth24Plus,
             depth_write_enabled: true,
             depth_compare: match args.ty {
                 DepthPassType::Shadow => CompareFunction::LessEqual,
@@ -162,17 +162,10 @@ fn create_depth_inner(
             stencil: StencilState::default(),
             bias: match args.ty {
                 DepthPassType::Prepass => DepthBiasState::default(),
-                DepthPassType::Shadow => DepthBiasState {
-                    constant: 2,
-                    slope_scale: 2.0,
-                    clamp: 0.0,
-                },
+                DepthPassType::Shadow => DepthBiasState::default(),
             },
         }),
-        multisample: MultisampleState {
-            count: args.samples as u32,
-            ..Default::default()
-        },
+        multisample: Default::default(),
         fragment: Some(FragmentState {
             module: frag,
             entry_point: "main",
