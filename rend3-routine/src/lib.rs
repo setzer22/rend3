@@ -57,15 +57,6 @@ impl PbrRenderRoutine {
     pub fn new(renderer: &Renderer, render_texture_options: RenderTextureOptions) -> Self {
         profiling::scope!("PbrRenderRoutine::new");
 
-        let interfaces = common::interfaces::ShaderInterfaces::new(&renderer.device, renderer.mode);
-
-        let samplers = common::samplers::Samplers::new(&renderer.device);
-
-        let cpu_culler = culling::cpu::CpuCuller::new();
-        let gpu_culler = renderer
-            .mode
-            .into_data(|| (), || culling::gpu::GpuCuller::new(&renderer.device));
-
         let primary_passes = {
             let d2_textures = renderer.d2_texture_manager.read();
             let directional_light = renderer.directional_light_manager.read();
@@ -78,10 +69,18 @@ impl PbrRenderRoutine {
                 d2_textures: &d2_textures,
                 directional_lights: &directional_light,
                 materials: &materials,
-                interfaces: &interfaces,
                 samples: render_texture_options.samples,
             })
         };
+
+        let interfaces = common::interfaces::ShaderInterfaces::new(&renderer.device, renderer.mode);
+
+        let samplers = common::samplers::Samplers::new(&renderer.device);
+
+        let cpu_culler = culling::cpu::CpuCuller::new();
+        let gpu_culler = renderer
+            .mode
+            .into_data(|| (), || culling::gpu::GpuCuller::new(&renderer.device));
 
         Self {
             interfaces,
@@ -113,7 +112,6 @@ impl PbrRenderRoutine {
                 d2_textures: &d2_textures,
                 directional_lights: &directional_light,
                 materials: &materials,
-                interfaces: &self.interfaces,
                 samples: options.samples,
             });
         }
@@ -525,8 +523,6 @@ pub struct PrimaryPassesNewArgs<'a> {
     pub directional_lights: &'a DirectionalLightManager,
     pub materials: &'a MaterialManager,
 
-    pub interfaces: &'a common::interfaces::ShaderInterfaces,
-
     pub samples: SampleCount,
 }
 
@@ -546,7 +542,6 @@ impl PrimaryPasses {
             common::depth_pass::build_depth_pass_pipeline(common::depth_pass::BuildDepthPassShaderArgs {
                 mode: args.mode,
                 device: args.device,
-                interfaces: args.interfaces,
                 texture_bgl: gpu_d2_texture_bgl,
                 materials: args.materials,
                 samples: SampleCount::One,
@@ -556,7 +551,6 @@ impl PrimaryPasses {
             common::depth_pass::build_depth_pass_pipeline(common::depth_pass::BuildDepthPassShaderArgs {
                 mode: args.mode,
                 device: args.device,
-                interfaces: args.interfaces,
                 texture_bgl: gpu_d2_texture_bgl,
                 materials: args.materials,
                 samples: args.samples,
@@ -565,7 +559,7 @@ impl PrimaryPasses {
         let forward_pass_args = common::forward_pass::BuildForwardPassShaderArgs {
             mode: args.mode,
             device: args.device,
-            interfaces: args.interfaces,
+            interfaces: unreachable!(),
             texture_bgl: gpu_d2_texture_bgl,
             materials: args.materials,
             samples: args.samples,

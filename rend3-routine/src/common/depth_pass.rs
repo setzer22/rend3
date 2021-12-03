@@ -25,7 +25,6 @@ pub struct BuildDepthPassShaderArgs<'a> {
     pub mode: RendererMode,
     pub device: &'a Device,
 
-    pub interfaces: &'a ShaderInterfaces,
     pub texture_bgl: ModeData<(), &'a BindGroupLayout>,
 
     pub materials: &'a MaterialManager,
@@ -122,7 +121,7 @@ fn create_depth_inner(
     name: &str,
 ) -> RenderPipeline {
     profiling::scope!("build depth pipeline", name);
-    
+
     let cpu_vertex_buffers = [];
     let gpu_vertex_buffers = gpu_vertex_buffers();
     args.device.create_render_pipeline(&RenderPipelineDescriptor {
