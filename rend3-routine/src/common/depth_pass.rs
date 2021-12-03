@@ -73,16 +73,16 @@ pub fn build_depth_pass_pipeline(args: BuildDepthPassShaderArgs) -> DepthPassPip
     };
 
     let mut bgls: ArrayVec<&BindGroupLayout, 4> = ArrayVec::new();
-    bgls.push(match args.ty {
-        DepthPassType::Shadow => &args.interfaces.shadow_uniform_bgl,
-        DepthPassType::Prepass => &args.interfaces.forward_uniform_bgl,
-    });
-    bgls.push(&args.interfaces.per_material_bgl);
-    if args.mode == RendererMode::GPUPowered {
-        bgls.push(args.texture_bgl.as_gpu())
-    } else {
-        bgls.push(args.materials.get_bind_group_layout_cpu::<PbrMaterial>());
-    }
+    // bgls.push(match args.ty {
+    //     DepthPassType::Shadow => &args.interfaces.shadow_uniform_bgl,
+    //     DepthPassType::Prepass => &args.interfaces.forward_uniform_bgl,
+    // });
+    // bgls.push(&args.interfaces.per_material_bgl);
+    // if args.mode == RendererMode::GPUPowered {
+    //     bgls.push(args.texture_bgl.as_gpu())
+    // } else {
+    //     bgls.push(args.materials.get_bind_group_layout_cpu::<PbrMaterial>());
+    // }
 
     let pll = args.device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("depth prepass"),
