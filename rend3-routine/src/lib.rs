@@ -541,6 +541,19 @@ impl PrimaryPasses {
         profiling::scope!("PrimaryPasses::new");
 
         let gpu_d2_texture_bgl = args.mode.into_data(|| (), || args.d2_textures.gpu_bgl());
+        let forward_pass_args = common::forward_pass::BuildForwardPassShaderArgs {
+            mode: args.mode,
+            device: args.device,
+            interfaces: args.interfaces,
+            texture_bgl: gpu_d2_texture_bgl,
+            materials: args.materials,
+            samples: args.samples,
+            transparency: TransparencyType::Opaque,
+            baking: common::forward_pass::Baking::Disabled,
+        };
+        let opaque_pipeline = Arc::new(common::forward_pass::build_forward_pass_pipeline(
+            forward_pass_args.clone(),
+        ));
 
         let shadow_pipelines =
             common::depth_pass::build_depth_pass_pipeline(common::depth_pass::BuildDepthPassShaderArgs {
@@ -562,19 +575,6 @@ impl PrimaryPasses {
                 samples: args.samples,
                 ty: common::depth_pass::DepthPassType::Prepass,
             });
-        let forward_pass_args = common::forward_pass::BuildForwardPassShaderArgs {
-            mode: args.mode,
-            device: args.device,
-            interfaces: args.interfaces,
-            texture_bgl: gpu_d2_texture_bgl,
-            materials: args.materials,
-            samples: args.samples,
-            transparency: TransparencyType::Opaque,
-            baking: common::forward_pass::Baking::Disabled,
-        };
-        let opaque_pipeline = Arc::new(common::forward_pass::build_forward_pass_pipeline(
-            forward_pass_args.clone(),
-        ));
         let cutout_pipeline = Arc::new(common::forward_pass::build_forward_pass_pipeline(
             common::forward_pass::BuildForwardPassShaderArgs {
                 transparency: TransparencyType::Cutout,
