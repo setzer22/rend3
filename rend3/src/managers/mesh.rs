@@ -26,9 +26,9 @@ pub const VERTEX_MATERIAL_INDEX_SIZE: usize = size_of::<u32>();
 pub const INDEX_SIZE: usize = size_of::<u32>();
 
 /// Pre-allocated vertex count in the vertex megabuffers.
-pub const STARTING_VERTICES: usize = 1 << 16;
+pub const STARTING_VERTICES: usize = 1 << 4;
 /// Pre-allocated index count in the index megabuffer.
-pub const STARTING_INDICES: usize = 1 << 16;
+pub const STARTING_INDICES: usize = 1 << 4;
 
 /// Internal representation of a mesh.
 pub struct InternalMesh {

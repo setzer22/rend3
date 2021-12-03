@@ -122,11 +122,7 @@ fn create_depth_inner(
     name: &str,
 ) -> RenderPipeline {
     profiling::scope!("build depth pipeline", name);
-    let color_state = [ColorTargetState {
-        format: TextureFormat::Rgba16Float,
-        blend: None,
-        write_mask: ColorWrites::empty(),
-    }];
+    
     let cpu_vertex_buffers = [];
     let gpu_vertex_buffers = gpu_vertex_buffers();
     args.device.create_render_pipeline(&RenderPipelineDescriptor {

@@ -8,18 +8,18 @@
 // layout(location = 2) out vec4 o_color;
 // layout(location = 3) flat out uint o_material;
 
-layout(set = 1, binding = 0, std430) readonly buffer ObjectOutputDataBuffer {
-    ObjectOutputData object_output[];
-};
+// layout(set = 1, binding = 0, std430) readonly buffer ObjectOutputDataBuffer {
+//     ObjectOutputData object_output[];
+// };
 #ifdef GPU_MODE
 layout(set = 1, binding = 1, std430) readonly buffer MaterialBuffer {
     GPUMaterialData materials[];
 };
 #endif
 #ifdef CPU_MODE
-layout(set = 2, binding = 10) uniform TextureData {
-    CPUMaterialData material;
-};
+// layout(set = 2, binding = 10) uniform TextureData {
+//     CPUMaterialData material;
+// };
 #endif
 
 void main() {
