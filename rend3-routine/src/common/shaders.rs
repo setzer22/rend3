@@ -30,14 +30,8 @@ pub unsafe fn mode_safe_shader(
 
     let use_unsafe = mode == RendererMode::GPUPowered;
 
-    match use_unsafe {
-        false => device.create_shader_module(&ShaderModuleDescriptor {
-            label: Some(label),
-            source: wgpu::util::make_spirv(source),
-        }),
-        true => device.create_shader_module_spirv(&ShaderModuleDescriptorSpirV {
-            label: Some(label),
-            source: wgpu::util::make_spirv_raw(source),
-        }),
-    }
+    device.create_shader_module_spirv(&ShaderModuleDescriptorSpirV {
+        label: Some(label),
+        source: wgpu::util::make_spirv_raw(source),
+    })
 }
