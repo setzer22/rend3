@@ -152,27 +152,8 @@ fn create_depth_inner(
             polygon_mode: PolygonMode::Fill,
             conservative: false,
         },
-        depth_stencil: Some(DepthStencilState {
-            format: TextureFormat::Depth24Plus,
-            depth_write_enabled: true,
-            depth_compare: match args.ty {
-                DepthPassType::Shadow => CompareFunction::LessEqual,
-                DepthPassType::Prepass => CompareFunction::GreaterEqual,
-            },
-            stencil: StencilState::default(),
-            bias: match args.ty {
-                DepthPassType::Prepass => DepthBiasState::default(),
-                DepthPassType::Shadow => DepthBiasState::default(),
-            },
-        }),
+        depth_stencil: None,
         multisample: Default::default(),
-        fragment: Some(FragmentState {
-            module: frag,
-            entry_point: "main",
-            targets: match args.ty {
-                DepthPassType::Prepass => &color_state,
-                DepthPassType::Shadow => &[],
-            },
-        }),
+        fragment: None,
     })
 }
