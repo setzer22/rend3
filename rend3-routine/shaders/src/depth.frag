@@ -6,12 +6,12 @@
 
 #include "structures.glsl"
 
+#ifdef ALPHA_CUTOUT
+
 layout(location = 0) in vec4 i_position;
 layout(location = 1) in vec2 i_coords0;
 layout(location = 2) in vec4 i_color;
 layout(location = 3) flat in uint i_material;
-
-#ifdef ALPHA_CUTOUT
 
 layout(set = 0, binding = 0) uniform sampler primary_sampler;
 #ifdef GPU_MODE
