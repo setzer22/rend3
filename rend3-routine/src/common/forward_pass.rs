@@ -38,6 +38,8 @@ pub struct BuildForwardPassShaderArgs<'a> {
     pub transparency: TransparencyType,
 
     pub baking: Baking,
+
+    pub wireframe: bool,
 }
 
 pub fn build_forward_pass_pipeline(args: BuildForwardPassShaderArgs<'_>) -> RenderPipeline {
@@ -61,14 +63,26 @@ pub fn build_forward_pass_pipeline(args: BuildForwardPassShaderArgs<'_>) -> Rend
         )
     };
 
-    let forward_pass_frag = unsafe {
-        mode_safe_shader(
-            args.device,
-            args.mode,
-            "forward pass frag",
-            "opaque.frag.cpu.wgsl",
-            "opaque.frag.gpu.spv",
-        )
+    let forward_pass_frag = if args.wireframe {
+        unsafe {
+            mode_safe_shader(
+                args.device,
+                args.mode,
+                "forward wireframe pass frag",
+                "opaque.frag.wireframe.cpu.wgsl",
+                "opaque.frag.wireframe.gpu.spv",
+            )
+        }
+    } else {
+        unsafe {
+            mode_safe_shader(
+                args.device,
+                args.mode,
+                "forward pass frag",
+                "opaque.frag.cpu.wgsl",
+                "opaque.frag.gpu.spv",
+            )
+        }
     };
 
     let mut bgls: ArrayVec<&BindGroupLayout, 6> = ArrayVec::new();
@@ -119,7 +133,11 @@ fn build_forward_pass_inner(
             front_face: FrontFace::Cw,
             cull_mode: Some(Face::Back),
             clamp_depth: false,
-            polygon_mode: PolygonMode::Fill,
+            polygon_mode: if args.wireframe {
+                PolygonMode::Line
+            } else {
+                PolygonMode::Fill
+            },
             conservative: false,
         },
         depth_stencil: match args.baking {
@@ -127,9 +145,13 @@ fn build_forward_pass_inner(
             Baking::Disabled => Some(DepthStencilState {
                 format: TextureFormat::Depth32Float,
                 depth_write_enabled: matches!(args.transparency, TransparencyType::Opaque | TransparencyType::Cutout),
-                depth_compare: match args.transparency {
-                    TransparencyType::Opaque | TransparencyType::Cutout => CompareFunction::Equal,
-                    TransparencyType::Blend => CompareFunction::GreaterEqual,
+                depth_compare: if args.wireframe {
+                    CompareFunction::Always
+                } else {
+                    match args.transparency {
+                        TransparencyType::Opaque | TransparencyType::Cutout => CompareFunction::Equal,
+                        TransparencyType::Blend => CompareFunction::GreaterEqual,
+                    }
                 },
                 stencil: StencilState::default(),
                 bias: DepthBiasState::default(),

@@ -56,6 +56,9 @@ void main() {
     GPUMaterialData material = materials[i_material];
     #endif
 
+    #ifdef WIREFRAME
+    o_color = vec4(1.0, 1.0, 1.0, 1.0);
+    #else
     PixelData pixel = get_per_pixel_data(material);
 
     if (MATERIAL_FLAG(FLAGS_UNLIT)) {
@@ -68,16 +71,17 @@ void main() {
         for (uint i = 0; i < directional_light_header.total_lights; ++i) {
             DirectionalLight light = directional_lights[i];
 
-            vec3 shadow_ndc = (directional_lights[i].view_proj * uniforms.inv_view * i_view_position).xyz;
-            vec2 shadow_flipped = (shadow_ndc.xy * 0.5) + 0.5;
-            vec4 shadow_shadow_coords = vec4(shadow_flipped.x, 1 - shadow_flipped.y, float(i), shadow_ndc.z);
+            //vec3 shadow_ndc = (directional_lights[i].view_proj * uniforms.inv_view * i_view_position).xyz;
+            //vec2 shadow_flipped = (shadow_ndc.xy * 0.5) + 0.5;
+            //vec4 shadow_shadow_coords = vec4(shadow_flipped.x, 1 - shadow_flipped.y, float(i), shadow_ndc.z);
 
-            float shadow_value;
+            float shadow_value = 1.0;
+            /*
             if (shadow_shadow_coords.x < 0 || shadow_shadow_coords.x > 1 || shadow_shadow_coords.y < 0 || shadow_shadow_coords.y > 1 || shadow_ndc.z < -1 || shadow_ndc.z > 1) {
                 shadow_value = 1.0;
             } else {
                 shadow_value = textureGrad(sampler2DArrayShadow(shadow, shadow_sampler), shadow_shadow_coords, vec2(0), vec2(0));
-            }
+            } */
 
             color += surface_shading(directional_lights[i], pixel, v, shadow_value * pixel.ambient_occlusion);
         }
@@ -85,4 +89,5 @@ void main() {
         o_color = max(vec4(color, pixel.albedo.a), uniforms.ambient * pixel.albedo);
         // o_normal = vec4(pixel.normal, 0.0);
     }
+    #endif
 }

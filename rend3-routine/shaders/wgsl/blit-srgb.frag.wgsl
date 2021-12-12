@@ -2,11 +2,11 @@
 var source: texture_2d<f32>;
 [[group(0), binding(0)]]
 var primary_sampler: sampler;
-var<private> tex_coords1: vec2<f32>;
+var<private> tex_coords_1: vec2<f32>;
 var<private> color: vec4<f32>;
 
-fn main1() {
-    let e30: vec2<f32> = tex_coords1;
+fn main_1() {
+    let e30: vec2<f32> = tex_coords_1;
     let e31: vec4<f32> = textureSample(source, primary_sampler, e30);
     let e33: vec3<f32> = (e31.xyz * 2.0);
     let e34: vec3<f32> = (e33 * 0.15000000596046448);
@@ -19,8 +19,8 @@ fn main1() {
 
 [[stage(fragment)]]
 fn main([[location(0)]] tex_coords: vec2<f32>) -> [[location(0)]] vec4<f32> {
-    tex_coords1 = tex_coords;
-    main1();
+    tex_coords_1 = tex_coords;
+    main_1();
     let e3: vec4<f32> = color;
     return e3;
 }

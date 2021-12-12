@@ -425,6 +425,7 @@ impl PbrRenderRoutine {
         depth: RenderTargetHandle,
         forward_uniform_bg: DataHandle<BindGroup>,
         culled: DataHandle<CulledPerMaterial>,
+        wireframe: bool,
     ) {
         let mut builder = graph.add_node(format_sso!("Primary Forward {:?}", transparency));
 
@@ -458,10 +459,14 @@ impl PbrRenderRoutine {
             let forward_uniform_bg = graph_data.get_data(temps, forward_uniform_handle).unwrap();
             let culled = graph_data.get_data(temps, cull_handle).unwrap();
 
-            let pass = match transparency {
-                TransparencyType::Opaque => &this.primary_passes.opaque_pass,
-                TransparencyType::Cutout => &this.primary_passes.cutout_pass,
-                TransparencyType::Blend => &this.primary_passes.transparent_pass,
+            let pass = if wireframe {
+                &this.primary_passes.wireframe_pass
+            } else {
+                match transparency {
+                    TransparencyType::Opaque => &this.primary_passes.opaque_pass,
+                    TransparencyType::Cutout => &this.primary_passes.cutout_pass,
+                    TransparencyType::Blend => &this.primary_passes.transparent_pass,
+                }
             };
 
             let d2_texture_output_bg_ref = ready.d2_texture.bg.as_ref().map(|_| (), |a| &**a);
@@ -497,6 +502,7 @@ pub struct PrimaryPassesNewArgs<'a> {
 pub struct PrimaryPasses {
     pub shadow_passes: directional::DirectionalShadowPass,
     pub opaque_pass: forward::ForwardPass,
+    pub wireframe_pass: forward::ForwardPass,
     pub cutout_pass: forward::ForwardPass,
     pub transparent_pass: forward::ForwardPass,
 }
@@ -535,9 +541,16 @@ impl PrimaryPasses {
             samples: args.samples,
             transparency: TransparencyType::Opaque,
             baking: common::forward_pass::Baking::Disabled,
+            wireframe: false,
         };
         let opaque_pipeline = Arc::new(common::forward_pass::build_forward_pass_pipeline(
             forward_pass_args.clone(),
+        ));
+        let wireframe_pipeline = Arc::new(common::forward_pass::build_forward_pass_pipeline(
+            common::forward_pass::BuildForwardPassShaderArgs {
+                wireframe: true,
+                ..forward_pass_args.clone()
+            },
         ));
         let cutout_pipeline = Arc::new(common::forward_pass::build_forward_pass_pipeline(
             common::forward_pass::BuildForwardPassShaderArgs {
@@ -561,6 +574,7 @@ impl PrimaryPasses {
                 transparent_pipeline,
                 TransparencyType::Blend,
             ),
+            wireframe_pass: forward::ForwardPass::new(None, wireframe_pipeline, TransparencyType::Opaque),
             cutout_pass: forward::ForwardPass::new(
                 Some(Arc::clone(&depth_pipelines.cutout)),
                 cutout_pipeline,
@@ -855,7 +869,7 @@ pub fn add_default_rendergraph<'node>(
 
     // Add primary rendering
     for trans in &per_transparency {
-        pbr.add_forward_to_graph(graph, trans.ty, color, resolve, depth, forward_uniform_bg, trans.cull);
+        pbr.add_forward_to_graph(graph, trans.ty, color, resolve, depth, forward_uniform_bg, trans.cull, false);
     }
 
     // Make the reference to the surface

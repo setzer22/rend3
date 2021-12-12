@@ -21,9 +21,11 @@ case $1 in
         glslc rend3-routine/shaders/src/opaque.vert -DCPU_MODE                           -O -g -o rend3-routine/shaders/spirv/opaque.vert.cpu.spv
         glslc rend3-routine/shaders/src/opaque.vert -DCPU_MODE -DBAKING                  -O -g -o rend3-routine/shaders/spirv/opaque-baking.vert.cpu.spv
         glslc rend3-routine/shaders/src/opaque.frag -DCPU_MODE                           -O -g -o rend3-routine/shaders/spirv/opaque.frag.cpu.spv
+        glslc rend3-routine/shaders/src/opaque.frag -DCPU_MODE -DWIREFRAME               -O -g -o rend3-routine/shaders/spirv/opaque.frag.wireframe.cpu.spv
         glslc rend3-routine/shaders/src/opaque.vert -DGPU_MODE                           -O -g -o rend3-routine/shaders/spirv/opaque.vert.gpu.spv
         glslc rend3-routine/shaders/src/opaque.vert -DGPU_MODE -DBAKING                  -O -g -o rend3-routine/shaders/spirv/opaque-baking.vert.gpu.spv
         glslc rend3-routine/shaders/src/opaque.frag -DGPU_MODE                           -O -g -o rend3-routine/shaders/spirv/opaque.frag.gpu.spv
+        glslc rend3-routine/shaders/src/opaque.frag -DGPU_MODE -DWIREFRAME               -O -g -o rend3-routine/shaders/spirv/opaque.frag.wireframe.gpu.spv
         glslc rend3-routine/shaders/src/skybox.vert                                      -O -g -o rend3-routine/shaders/spirv/skybox.vert.spv
         glslc rend3-routine/shaders/src/skybox.frag                                      -O -g -o rend3-routine/shaders/spirv/skybox.frag.spv
 
@@ -39,6 +41,7 @@ case $1 in
         naga rend3-routine/shaders/spirv/opaque.vert.cpu.spv          --keep-coordinate-space rend3-routine/shaders/wgsl/opaque.vert.cpu.wgsl
         naga rend3-routine/shaders/spirv/opaque-baking.vert.cpu.spv   --keep-coordinate-space rend3-routine/shaders/wgsl/opaque-baking.vert.cpu.wgsl
         naga rend3-routine/shaders/spirv/opaque.frag.cpu.spv          --keep-coordinate-space rend3-routine/shaders/wgsl/opaque.frag.cpu.wgsl
+        naga rend3-routine/shaders/spirv/opaque.frag.wireframe.cpu.spv          --keep-coordinate-space rend3-routine/shaders/wgsl/opaque.frag.wireframe.cpu.wgsl
         naga rend3-routine/shaders/spirv/skybox.vert.spv              --keep-coordinate-space rend3-routine/shaders/wgsl/skybox.vert.wgsl
         naga rend3-routine/shaders/spirv/skybox.frag.spv              --keep-coordinate-space rend3-routine/shaders/wgsl/skybox.frag.wgsl
     ;;
