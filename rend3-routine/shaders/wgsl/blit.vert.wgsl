@@ -19,6 +19,8 @@ fn main_1() {
     let e21: f32 = f32((e15 % 2u));
     perVertexStruct.gl_Position = vec4<f32>(((e17 * 4.0) - 1.0), ((e21 * 4.0) - 1.0), 0.0, 1.0);
     tex_coords = vec2<f32>((e17 * 2.0), (1.0 - (e21 * 2.0)));
+    let e31: f32 = tex_coords[1u];
+    tex_coords[1u] = (e31 * 2.0);
     return;
 }
 
