@@ -175,6 +175,17 @@ impl<'node> RenderGraph<'node> {
         // this pass.
         graph_texture_store.mark_unused();
 
+        // This code below uses the internal GraphTextureStore to allocate
+        // textures for each node of the render graph. It does so in a way that
+        // textures are reused when possible, in a similar fashion to a register
+        // allocation algorithm.
+        //
+        // The interface of GraphTextureStore takes and returns `Arc`s, which
+        // allow us to keep referencing the active textures even after we've
+        // returned them. This is important, because we need to ensure nodes
+        // will be able to access their allocated texture (and not just a
+        // TextureView).
+
         // Stores the Texture while a texture is using it
         let mut active_textures = FastHashMap::default();
         // Maps a name to its actual texture view.
@@ -209,9 +220,17 @@ impl<'node> RenderGraph<'node> {
                 for end in ending {
                     match end {
                         GraphResource::Texture(idx) => {
+                            // We return the texture, but clone the Arc so we
+                            // can keep referencing it in case the node requests
+                            // it. This other reference will die when
+                            // `active_textures` gets dropped and the `Arc`
+                            // itself is not exposed to end-users, so by the end
+                            // of the frame the only reference will be in the
+                            // texture store.
                             let tex = active_textures
-                                .remove(&idx)
-                                .expect("internal rendergraph error: texture end with no start");
+                                .get(&idx)
+                                .expect("internal rendergraph error: texture end with no start")
+                                .clone();
 
                             let desc = self.targets[idx].clone();
                             graph_texture_store.return_texture(desc.to_core(), tex);
@@ -329,7 +348,8 @@ impl<'node> RenderGraph<'node> {
 
             {
                 let store = RenderGraphDataStore {
-                    texture_mapping: &active_views,
+                    texture_mapping: &active_textures,
+                    texture_view_mapping: &active_views,
                     shadow_coordinates: data_core.directional_light_manager.get_coords(),
                     shadow_views: data_core.directional_light_manager.get_layer_views(),
                     data: &self.data,

@@ -1,5 +1,7 @@
 //! Rendergraph
 
+use std::sync::Arc;
+
 use wgpu::{Device, Extent3d, Texture, TextureDescriptor, TextureDimension};
 
 use crate::{
@@ -8,7 +10,7 @@ use crate::{
 };
 
 struct StoredTexture {
-    inner: Texture,
+    inner: Arc<Texture>,
     used: bool,
 }
 
@@ -22,13 +24,22 @@ impl GraphTextureStore {
         }
     }
 
-    pub fn get_texture(&mut self, device: &Device, desc: RenderTargetCore) -> Texture {
+    pub fn get_texture(&mut self, device: &Device, desc: RenderTargetCore) -> Arc<Texture> {
+        // NOTE: It is important that the `Arc` is moved out of `get_texture`
+        // and not cloned. This struct is meant to keep track of textures that
+        // have been handed over to a render graph, and it does that by
+        // temporarily removing them. The textures are restored during
+        // `return_texture`.
+        //
+        // An `Arc` is used so that the graph can still provide a way for users
+        // to access the `Texture` object, and not just a view. This is required
+        // by wgpu in some APIs.
         let vec = self.textures.entry(desc).or_insert_with(|| Vec::with_capacity(16));
         if let Some(tex) = vec.pop() {
             return tex.inner;
         }
 
-        device.create_texture(&TextureDescriptor {
+        Arc::new(device.create_texture(&TextureDescriptor {
             label: None,
             size: Extent3d {
                 width: desc.resolution.x,
@@ -40,10 +51,10 @@ impl GraphTextureStore {
             dimension: TextureDimension::D2,
             format: desc.format,
             usage: desc.usage,
-        })
+        }))
     }
 
-    pub fn return_texture(&mut self, desc: RenderTargetCore, tex: Texture) {
+    pub fn return_texture(&mut self, desc: RenderTargetCore, tex: Arc<Texture>) {
         let vec = self.textures.entry(desc).or_insert_with(|| Vec::with_capacity(16));
 
         vec.push(StoredTexture { inner: tex, used: true });

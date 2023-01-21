@@ -1,6 +1,6 @@
-use std::{any::Any, cell::RefCell, marker::PhantomData};
+use std::{any::Any, cell::RefCell, marker::PhantomData, sync::Arc};
 
-use wgpu::TextureView;
+use wgpu::{TextureView, Texture};
 
 use crate::{
     graph::{
@@ -46,7 +46,8 @@ impl<T> PartialEq for DataHandle<T> {
 ///
 /// This is how you turn [DeclaredDependency] into actual wgpu resources.
 pub struct RenderGraphDataStore<'a> {
-    pub(super) texture_mapping: &'a FastHashMap<usize, TextureView>,
+    pub(super) texture_mapping: &'a FastHashMap<usize, Arc<Texture>>,
+    pub(super) texture_view_mapping: &'a FastHashMap<usize, TextureView>,
     pub(super) shadow_coordinates: &'a [ShadowCoordinates],
     pub(super) shadow_views: &'a [TextureView],
     pub(super) data: &'a [Box<dyn Any>], // Any is RefCell<Option<T>> where T is the stored data
@@ -67,12 +68,28 @@ impl<'a> RenderGraphDataStore<'a> {
     pub fn get_render_target(&self, dep: DeclaredDependency<RenderTargetHandle>) -> &'a TextureView {
         match dep.handle.resource {
             GraphResource::Texture(name) => self
-                .texture_mapping
+                .texture_view_mapping
                 .get(&name)
                 .expect("internal rendergraph error: failed to get named texture"),
             GraphResource::OutputTexture => self
                 .output
                 .expect("internal rendergraph error: tried to get unacquired surface image"),
+            r => {
+                panic!("internal rendergraph error: tried to get a {:?} as a render target", r)
+            }
+        }
+    }
+
+    /// Get a rendertarget from the handle to one.
+    pub fn get_render_target_texture(&self, dep: DeclaredDependency<RenderTargetHandle>) -> &'a Texture {
+        match dep.handle.resource {
+            GraphResource::Texture(name) => self
+                .texture_mapping
+                .get(&name)
+                .expect("internal rendergraph error: failed to get named texture"),
+            GraphResource::OutputTexture => {
+                panic!("The output texture can only be obtained as a view. Use `get_render_target` instead.")
+            },
             r => {
                 panic!("internal rendergraph error: tried to get a {:?} as a render target", r)
             }
